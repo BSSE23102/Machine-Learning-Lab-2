@@ -81,12 +81,77 @@ print(f"Condition Number of (X^T X): {cond_number:.2e}")
 # ================================
 # RIDGE REGRESSION
 # ================================
+def ridge_regression(X, y, lambd):
+    """
+    Task B1: Ridge implementation from scratch.
+    Does NOT regularize the bias term (first column).
+    """
+    n_features = X.shape[1]
 
-def ridge_regression(X, y, lambda_):
-    # TODO:
-    # Implement (X^T X + λI)^(-1) X^T y
-    # Do NOT regularize bias term
-    pass
+    #1. Create Identity Matrix I
+    I = np.eye(n_features)
+
+    #2. set first diagonal element to 0
+    I[0, 0] = 0
+
+    # 3.  w = (X^T X + λI)^-1 X^T y
+    XTX = X.T @ X
+    XTX_reg = XTX + lambd * I
+
+    w_ridge = np.linalg.inv(XTX_reg) @ X.T @ y
+    return w_ridge
+
+# Example usage with lambda = 0.1
+w_ridge = ridge_regression(X_matrix, y_train, lambd=0.1)
+print(f"Ridge weights L2 norm: {np.linalg.norm(w_ridge):.2f}")
+
+
+
+
+
+
+# Lambda values to test
+lambdas = [0, 1e-4, 1e-2, 1e-1, 1]
+results = []
+
+# Prepare plotting
+plt.figure(figsize=(12, 8))
+x_plot = np.linspace(0, 1, 100).reshape(-1, 1)
+X_plot_poly = build_polynomial_features(x_plot, 20)
+
+for l in lambdas:
+    # 1. Compute Ridge Weights
+    w_ridge = ridge_regression(X_matrix, y_train, l)
+
+    # 2. Record Metrics
+    w_norm = np.linalg.norm(w_ridge)
+    # Compute condition number of the regularized matrix (XTX + lambda*I)
+    I = np.eye(X_matrix.shape[1]);
+    I[0, 0] = 0
+    cond_num = np.linalg.cond(X_matrix.T @ X_matrix + l * I)
+
+    results.append((l, w_norm, cond_num))
+
+    # 3. Plot fitted curve
+    y_plot = X_plot_poly @ w_ridge
+    plt.plot(x_plot, y_plot, label=f'lambda={l}')
+
+plt.scatter(x_train, y_train, color='red', label='Train Data')
+plt.ylim(-2, 2)
+plt.legend()
+plt.title("Task B2: Impact of Regularization Parameter $\lambda$")
+plt.show()
+
+# Display Results Table
+print("Lambda | Coeff Norm | Condition Number")
+for res in results:
+    print(f"{res[0]:<7} | {res[1]:<10.2e} | {res[2]:.2e}")
+
+
+
+
+
+
 
 # ================================
 # ANALYSIS UTILITIES
